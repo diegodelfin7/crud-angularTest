@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html ng-app='todoApp'>
+<head>
+	<title></title>
+	<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/angular.js/1.5.8/angular.js'></script>
+	<link href="ui-bootstrap-custom-2.2.0-csp.css" rel="stylesheet">
+	<script src='ui-bootstrap-custom-2.2.0.js'></script>
+	<script src='ui-bootstrap-custom-tpls-2.2.0.js'></script>
+</head>
+<body>
+	<div ng-controller='TodoListController as vm' class="container">
+		<script type="text/ng-template" id="AddEditContacto.html">
+			<div class="modal-header">
+				<h3>{{ insCtrl.titulo }}</h3>
+			</div>
+			<div class="modal-body">
+				<div class="form-group">
+					<input type="text" name="" ng-model='insCtrl.user.nombre'/>
+				</div>
+				<div>
+					<button ng-click='insCtrl.actionSubmit()'>aceptar</button>
+				</div>
+			</div>
+		</script>
+		<script type="text/ng-template" id="DeleteContacto.html">
+			<div class="modal-header">
+				<h3>{{ insCtrl.titulo}} </h3>
+			</div>
+			<div class='modal-body'>
+				<p>Desea eliminar un contacto?</p>
+				<button ng-click='insCtrl.actionSubmit()'>aceptar</button>
+			</div>
+		</script>
+		<div>
+			<button ng-click='vm.add()'>add</button>
+		</div>
+		<table>
+			<tr>
+				<td>Id</td>
+				<td>Nombre</td>
+				<td>Operaciones</td>
+			</tr>
+			<tr ng-repeat='x in vm.datos'>
+				<td>{{ x.id }}</td>
+				<td>{{ x.nombre }}</td>
+				<td> 
+					<button ng-click='vm.update(x,$index)'> editar</button>
+					<button ng-click='vm.delete(x,$index)'> borrar</button>
+				</td>
+			</tr>
+		</table>
+	</div>
+	<script>
+		angular.module('todoApp', ['ui.bootstrap'])
+		.controller('TodoListController', function($uibModal) {
+		  var vm = this;
+		  vm.datos = [
+		  	{ 'id' : 1 , 'nombre': 'cpe'},
+		  	{ 'id' : 2 ,'nombre' : 'CPE'}];
+
+		 
+		  function OperationSelectCrud(contacto,index) {
+		  	var tplcrudContacto;
+
+		  	switch(vm.operator){
+		  		case 1 : console.log('1 add');
+		  		tplcrudContacto = 'AddEditContacto.html';
+		  		break;
+		  		case 2 : console.log('2 edit');
+		  		tplcrudContacto = 'AddEditContacto.html';
+		  		break;
+		  		case 3 : console.log('3 delete');
+		  		tplcrudContacto = 'DeleteContacto.html';
+		  		break;
+		  	}
+
+		  	var OpcionesCrud = {};
+		  	OpcionesCrud.operationId = angular.copy(vm.operator);
+		  	OpcionesCrud.datos = angular.copy(contacto) ;
+
+		  	var modalInstace = $uibModal.open({
+		  		templateUrl : tplcrudContacto,
+		  		controller :'InstanceCtrl',
+		  		controllerAs  : 'insCtrl',
+		  		size : 'md',
+		  		resolve : {
+		  			ObjectDatos : OpcionesCrud
+		  		}
+		  	});	
+
+		  	modalInstace.result.then(function(response){
+		  		switch(response.estadoId) {
+		  			case 1 : console.log('se agrego correctamente');
+		  			break;
+		  			case 2 : console.log('se editor correctamente');
+		  			break;
+		  			case 3 : console.log('se elimino correctamente');
+		  			break;
+		  		}
+		  		console.log('response',response);
+		  	},errorCallback);
+
+		  }
+
+		  function errorCallback(callback){
+		  	console.log('callback',callback);
+		  }
+		  vm.add = function() {
+		  	vm.operator = 1 ;
+		  	OperationSelectCrud();
+		  }
+
+		  vm.update = function(contacto, index){
+		  	vm.operator = 2;
+		  	OperationSelectCrud(contacto,index);
+		  }
+
+ 		  vm.delete = function(contacto, index) {
+ 		  	vm.operator = 3;
+		  	OperationSelectCrud(contacto, index);
+		  }
+		  console.log('controller main', vm);
+
+  		})
+  		.controller('InstanceCtrl', function($uibModalInstance, ObjectDatos) {
+  			
+  			var vm = this,titulo,actionSubmit;
+  			
+  			vm.user = ObjectDatos.datos;
+
+  			switch(ObjectDatos.operationId) {
+  				case 1 : 
+  				titulo = 'Agregar Contacto';
+  				actionSubmit = InsertBaseDatos;
+  				console.log('al service agregar'); 
+  				break;
+  				case 2 :
+  				titulo = 'Editar Contacto'; 
+  				actionSubmit = EditBaseDatos;
+  				console.log('al service editar');
+  				break;
+  				case 3 :
+  				titulo = 'Eliminar Contacto';
+  				actionSubmit = DeleteBaseDatos;
+  				console.log('al service eliminar');
+  				break;
+  			}
+
+  			vm.titulo = titulo;
+  			vm.actionSubmit = actionSubmit;
+
+  			function InsertBaseDatos() {
+  				console.log('insert base datos');
+  				var response = {};
+  				response.estadoId = 1;
+
+  				$uibModalInstance.close(response);
+
+  			}
+
+  			function EditBaseDatos(){
+  				console.log('editar base datos');
+  				var response = {};
+  				response.estadoId = 2;
+  				$uibModalInstance.close(response);
+
+  			}
+
+  			function DeleteBaseDatos() {
+  				console.log('delete base datos');
+  				var response = {};
+  				response.estadoId = 3;
+
+  				$uibModalInstance.close(response);
+
+  			}
+
+  			console.log('vm scope controller instance ', vm);
+
+  		});
+	</script>
+</body>
+</html>
